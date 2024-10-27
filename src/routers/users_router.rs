@@ -11,6 +11,8 @@ pub mod users_router {
         Router::new()
             .route("/", post(create_user).get(get_all_users))
             .route("/:id", get(get_user_by_id).put(update_user).delete(delete_user))
+            .route("/email/:email", get(get_user_by_email))
+            .route("/phone/:phone", get(get_user_by_phone))
     }
 
     pub async fn get_all_users(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {
@@ -33,6 +35,34 @@ pub mod users_router {
             Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
                 "status": "error",
                 "message": format!("User with ID: {} not found", id)
+            }))))
+        }
+    }
+
+    pub async fn get_user_by_email(
+        Extension(db): Extension<Arc<Database>>,
+        Path(email): Path<String>,
+    ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+        let repository = UserRepository::new(db);
+        match repository.get_by_email(email.clone()).await {
+            Ok(user) => Ok((StatusCode::OK, Json(user))),
+            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
+                "status": "error",
+                "message": format!("User with email: {} not found", email)
+            }))))
+        }
+    }
+
+    pub async fn get_user_by_phone(
+        Extension(db): Extension<Arc<Database>>,
+        Path(phone): Path<String>,
+    ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+        let repository = UserRepository::new(db);
+        match repository.get_by_phone(phone.clone()).await {
+            Ok(user) => Ok((StatusCode::OK, Json(user))),
+            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
+                "status": "error",
+                "message": format!("User with phone: {} not found", phone)
             }))))
         }
     }

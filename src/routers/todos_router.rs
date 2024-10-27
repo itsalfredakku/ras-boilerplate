@@ -14,6 +14,7 @@ pub mod todos_router {
         Router::new()
             .route("/", post(create_todo).get(get_all_todos))
             .route("/:id", get(get_todo_by_id).put(update_todo).delete(delete_todo))
+            .route("/title/:title", get(get_todo_by_title))
     }
 
     pub async fn get_all_todos(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {

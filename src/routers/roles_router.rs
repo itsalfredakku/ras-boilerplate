@@ -11,6 +11,7 @@ pub mod roles_router {
         Router::new()
             .route("/", post(create_role).get(get_all_roles))
             .route("/:id", get(get_role_by_id).put(update_role).delete(delete_role))
+            .route("/name/:name", get(get_role_by_name))
     }
 
     pub async fn get_all_roles(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {
