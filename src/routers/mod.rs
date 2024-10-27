@@ -1,10 +1,10 @@
-pub mod healthcheck_router;
+pub mod healthcheck_handler;
 pub mod roles_router;
 pub mod todos_router;
 pub mod users_router;
 
 pub mod api_router {
-    use crate::routers::healthcheck_router::healthcheck_handler;
+    use crate::routers::healthcheck_handler::healthcheck_handler;
     use crate::routers::{roles_router::roles_router, todos_router::todos_router, users_router::users_router};
     use axum::routing::get;
     use axum::Router;

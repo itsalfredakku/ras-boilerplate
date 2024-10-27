@@ -1,4 +1,3 @@
-pub mod repositories;
-pub mod database;
-pub mod models;
+pub mod db;
+pub mod data;
 pub mod routers;

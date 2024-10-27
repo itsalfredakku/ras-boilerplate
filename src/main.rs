@@ -2,7 +2,7 @@ use axum::http::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE},
     HeaderValue, Method,
 };
-use rss_boilerplate::database::Database;
+use rss_boilerplate::db::Database;
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
 extern crate dotenv;

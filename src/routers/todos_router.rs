@@ -1,7 +1,7 @@
 pub mod todos_router {
-    use crate::repositories::todos_repository::TodosRepository;
-    use crate::database::Database;
-    use crate::models::todo::Todo;
+    use crate::data::repositories::todos_repository::TodosRepository;
+    use crate::db::Database;
+    use crate::data::models::todo::Todo;
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::response::IntoResponse;
@@ -79,7 +79,7 @@ pub mod todos_router {
             let json_response = serde_json::json!({
                 "status": "error",
                 "message": "Todo already exists",
-                "repositories": todo,
+                "todo": todo,
             });
             return Err((StatusCode::BAD_REQUEST, Json(json_response)));
         }
@@ -93,7 +93,7 @@ pub mod todos_router {
             Ok(todo) => {
                 let json_response = serde_json::json!({
                     "status": "success",
-                    "repositories": todo[0].to_owned(),
+                    "todo": todo.to_owned(),
                 });
                 Ok((StatusCode::CREATED, Json(json_response)))
             }

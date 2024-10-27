@@ -1,7 +1,7 @@
 pub mod roles_router {
-    use crate::repositories::roles_repository::RolesRepository;
-    use crate::database::Database;
-    use crate::models::role::Role;
+    use crate::data::repositories::roles_repository::RolesRepository;
+    use crate::db::Database;
+    use crate::data::models::role::Role;
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::{
@@ -83,7 +83,7 @@ pub mod roles_router {
                 StatusCode::CREATED,
                 Json(serde_json::json!({
                     "status": "success",
-                    "repositories": role[0].to_owned()
+                    "repositories": role.to_owned()
                 })),
             )),
             Err(_) => Err((

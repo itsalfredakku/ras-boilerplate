@@ -1,5 +1,5 @@
-use crate::database::Database;
-use crate::models::user::User;
+use crate::db::Database;
+use crate::data::models::user::User;
 use std::sync::Arc;
 use surrealdb::err::Error::Thrown;
 use surrealdb::Error;
@@ -66,7 +66,7 @@ impl UsersRepository {
         ))))
     }
 
-    pub async fn create(&self, content: User) -> Result<Vec<User>, Error> {
+    pub async fn create(&self, content: User) -> Result<User, Error> {
         let record = self
             .db
             .client

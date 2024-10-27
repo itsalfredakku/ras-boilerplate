@@ -51,25 +51,3 @@ impl Database {
         }))
     }
 }
-
-// Lazy initialization for a globally accessible database instance
-// pub static DB: Lazy<Surreal<Client>> = Lazy::new(Surreal::init);
-//
-// pub async fn connect_db() -> Result<()> {
-//     // Load the environment variables
-//     let surreal_address = env::var("SURREAL_ADDRESS").expect("SURREAL_ADDRESS environment variable is not set");
-//     let surreal_user = env::var("SURREAL_USER").expect("SURREAL_USER environment variable is not set");
-//     let surreal_password = env::var("SURREAL_PASSWORD").expect("SURREAL_PASSWORD environment variable is not set");
-//     let surreal_ns = env::var("SURREAL_NAMESPACE").expect("SURREAL_NAMESPACE environment variable is not set");
-//     let surreal_database = env::var("SURREAL_DATABASE").expect("SURREAL_DATABASE environment variable is not set");
-//
-//     // Connect to the database using the global instance
-//     DB.connect::<Ws>(&surreal_address).await?;
-//     DB.signin(Root {
-//         username: &surreal_user,
-//         password: &surreal_password,
-//     }).await?;
-//     DB.use_ns(&surreal_ns).use_db(&surreal_database).await?;
-//
-//     Ok(())
-// }

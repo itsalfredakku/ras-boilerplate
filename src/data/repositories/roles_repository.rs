@@ -1,5 +1,5 @@
-use crate::database::Database;
-use crate::models::role::Role;
+use crate::db::Database;
+use crate::data::models::role::Role;
 use std::sync::Arc;
 use surrealdb::err::Error::Thrown;
 use surrealdb::Error;
@@ -48,7 +48,7 @@ impl RolesRepository {
         ))))
     }
 
-    pub async fn create(&self, content: Role) -> Result<Vec<Role>, Error> {
+    pub async fn create(&self, content: Role) -> Result<Role, Error> {
         let record = self
             .db
             .client

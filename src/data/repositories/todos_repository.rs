@@ -1,5 +1,5 @@
-use crate::database::Database;
-use crate::models::todo::Todo;
+use crate::db::Database;
+use crate::data::models::todo::Todo;
 use std::sync::Arc;
 use surrealdb::{error::Db::Thrown, Error};
 
@@ -47,7 +47,7 @@ impl TodosRepository {
         ))))
     }
 
-    pub async fn create(&self, content: Todo) -> Result<Vec<Todo>, Error> {
+    pub async fn create(&self, content: Todo) -> Result<Todo, Error> {
         let record = self
             .db
             .client

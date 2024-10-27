@@ -1,7 +1,7 @@
 pub mod users_router {
-    use crate::repositories::users_repository::UsersRepository;
-    use crate::database::Database;
-    use crate::models::user::User;
+    use crate::data::repositories::users_repository::UsersRepository;
+    use crate::db::Database;
+    use crate::data::models::user::User;
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::{
