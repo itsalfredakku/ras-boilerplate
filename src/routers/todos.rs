@@ -1,19 +1,25 @@
 pub mod todos_router {
-    use std::sync::Arc;
-    use axum::{routing::{get, post}, Extension, Json, Router};
+    use crate::data::contexts::todos_context::TodoRepository;
+    use crate::database::Database;
+    use crate::models::todo::Todo;
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::response::IntoResponse;
+    use axum::{
+        routing::{get, post},
+        Extension, Json, Router,
+    };
     use chrono::Local;
     use serde::{Deserialize, Serialize};
-    use crate::data::contexts::todos_context::TodoRepository;
-    use crate::db::Database;
-    use crate::models::todo::Todo;
+    use std::sync::Arc;
 
     pub fn router() -> Router {
         Router::new()
             .route("/", post(create_todo).get(get_all_todos))
-            .route("/:id", get(get_todo_by_id).put(update_todo).delete(delete_todo))
+            .route(
+                "/:id",
+                get(get_todo_by_id).put(update_todo).delete(delete_todo),
+            )
             .route("/title/:title", get(get_todo_by_title))
     }
 
@@ -37,10 +43,13 @@ pub mod todos_router {
         let repository = TodoRepository::new(db);
         match repository.get_by_id(id.clone()).await {
             Ok(todo) => Ok((StatusCode::OK, Json(todo))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Todo with ID: {} not found", id)
-            })))),
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Todo with ID: {} not found", id)
+                })),
+            )),
         }
     }
 
@@ -51,10 +60,13 @@ pub mod todos_router {
         let repository = TodoRepository::new(db);
         match repository.get_by_title(title.clone()).await {
             Ok(todo) => Ok((StatusCode::OK, Json(todo))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Todo with title: {} not found", title)
-            })))),
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Todo with title: {} not found", title)
+                })),
+            )),
         }
     }
 
@@ -85,10 +97,13 @@ pub mod todos_router {
                 });
                 Ok((StatusCode::CREATED, Json(json_response)))
             }
-            Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to create todo"
-            })))),
+            Err(_) => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Failed to create todo"
+                })),
+            )),
         }
     }
 
@@ -115,20 +130,29 @@ pub mod todos_router {
                 todo.updated_at = Some(datetime);
 
                 match repository.update(id.clone(), todo.clone()).await {
-                    Ok(todo_response) => Ok((StatusCode::OK, Json(serde_json::json!({
-                        "status": "success",
-                        "data": todo_response
-                    })))),
-                    Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                        "status": "error",
-                        "message": "Failed to update todo"
-                    })))),
+                    Ok(todo_response) => Ok((
+                        StatusCode::OK,
+                        Json(serde_json::json!({
+                            "status": "success",
+                            "data": todo_response
+                        })),
+                    )),
+                    Err(_) => Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(serde_json::json!({
+                            "status": "error",
+                            "message": "Failed to update todo"
+                        })),
+                    )),
                 }
             }
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Todo with ID: {} not found", id)
-            })))),
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Todo with ID: {} not found", id)
+                })),
+            )),
         }
     }
 

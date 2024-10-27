@@ -6,5 +6,5 @@ use surrealdb::sql::Thing;
 pub struct Role {
     pub id: Option<Thing>,
     pub name: String,
-    pub created_at: Option<DateTime<Local>>
+    pub created_at: Option<DateTime<Local>>,
 }

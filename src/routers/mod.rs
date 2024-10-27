@@ -1,14 +1,13 @@
-pub mod todos_router;
-pub mod users_router;
-pub mod roles_router;
-pub mod healthcheck_router;
-
+pub mod healthcheck;
+pub mod roles;
+pub mod todos;
+pub mod users;
 
 pub mod api_router {
-    use axum::Router;
+    use crate::routers::healthcheck::healthcheck_handler;
+    use crate::routers::{roles::roles_router, todos::todos_router, users::users_router};
     use axum::routing::get;
-    use crate::routers::{roles_router::roles_router, todos_router::todos_router, users_router::users_router};
-    use crate::routers::healthcheck_router::healthcheck_handler;
+    use axum::Router;
 
     pub fn api_router() -> Router {
         Router::new()

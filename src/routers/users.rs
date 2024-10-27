@@ -1,16 +1,23 @@
 pub mod users_router {
-    use std::sync::Arc;
-    use axum::{routing::{get, post}, Extension, Json, Router, response::IntoResponse};
+    use crate::data::contexts::user_repository::UserRepository;
+    use crate::database::Database;
+    use crate::models::user::User;
     use axum::extract::Path;
     use axum::http::StatusCode;
-    use crate::data::contexts::user_repository::UserRepository;
-    use crate::db::Database;
-    use crate::models::user::User;
+    use axum::{
+        response::IntoResponse,
+        routing::{get, post},
+        Extension, Json, Router,
+    };
+    use std::sync::Arc;
 
     pub fn router() -> Router {
         Router::new()
             .route("/", post(create_user).get(get_all_users))
-            .route("/:id", get(get_user_by_id).put(update_user).delete(delete_user))
+            .route(
+                "/:id",
+                get(get_user_by_id).put(update_user).delete(delete_user),
+            )
             .route("/email/:email", get(get_user_by_email))
             .route("/phone/:phone", get(get_user_by_phone))
     }
@@ -32,10 +39,13 @@ pub mod users_router {
         let repository = UserRepository::new(db);
         match repository.get_by_id(id.clone()).await {
             Ok(user) => Ok((StatusCode::OK, Json(user))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("User with ID: {} not found", id)
-            }))))
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("User with ID: {} not found", id)
+                })),
+            )),
         }
     }
 
@@ -46,10 +56,13 @@ pub mod users_router {
         let repository = UserRepository::new(db);
         match repository.get_by_email(email.clone()).await {
             Ok(user) => Ok((StatusCode::OK, Json(user))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("User with email: {} not found", email)
-            }))))
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("User with email: {} not found", email)
+                })),
+            )),
         }
     }
 
@@ -60,27 +73,36 @@ pub mod users_router {
         let repository = UserRepository::new(db);
         match repository.get_by_phone(phone.clone()).await {
             Ok(user) => Ok((StatusCode::OK, Json(user))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("User with phone: {} not found", phone)
-            }))))
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("User with phone: {} not found", phone)
+                })),
+            )),
         }
     }
 
     pub async fn create_user(
         Extension(db): Extension<Arc<Database>>,
         Json(body): Json<User>,
-    ) ->  Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = UserRepository::new(db);
         match repository.create(body.clone()).await {
-            Ok(user) => Ok((StatusCode::CREATED, Json(serde_json::json!({
-                "status": "success",
-                "data": user
-            })))),
-            Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to create user"
-            }))))
+            Ok(user) => Ok((
+                StatusCode::CREATED,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "data": user
+                })),
+            )),
+            Err(_) => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Failed to create user"
+                })),
+            )),
         }
     }
 
@@ -91,14 +113,20 @@ pub mod users_router {
     ) -> impl IntoResponse {
         let repository = UserRepository::new(db);
         match repository.update(id.clone(), body.clone()).await {
-            Ok(user) => (StatusCode::OK, Json(serde_json::json!({
-                "status": "success",
-                "data": user
-            }))),
-            Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to update user"
-            })))
+            Ok(user) => (
+                StatusCode::OK,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "data": user
+                })),
+            ),
+            Err(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Failed to update user"
+                })),
+            ),
         }
     }
 
@@ -108,14 +136,20 @@ pub mod users_router {
     ) -> impl IntoResponse {
         let repository = UserRepository::new(db);
         match repository.delete(id.clone()).await {
-            Ok(_) => (StatusCode::NO_CONTENT, Json(serde_json::json!({
-                "status": "success",
-                "message": "User deleted successfully"
-            }))),
-            Err(_) => (StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("User with ID: {} not found", id)
-            })))
+            Ok(_) => (
+                StatusCode::NO_CONTENT,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "message": "User deleted successfully"
+                })),
+            ),
+            Err(_) => (
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("User with ID: {} not found", id)
+                })),
+            ),
         }
     }
 }

@@ -1,7 +1,7 @@
+use crate::database::Database;
+use crate::models::todo::Todo;
 use std::sync::Arc;
-use crate::{models::todo::Todo};
 use surrealdb::{error::Db::Thrown, Error};
-use crate::db::Database;
 
 pub struct TodoRepository {
     db: Arc<Database>,
@@ -30,7 +30,9 @@ impl TodoRepository {
     }
 
     pub async fn get_by_title(&self, title: String) -> Result<Todo, Error> {
-        if let Some(record) = self.db.client
+        if let Some(record) = self
+            .db
+            .client
             .query("SELECT * FROM todo WHERE title = $title")
             .bind(("title", title.clone()))
             .await?
@@ -39,11 +41,16 @@ impl TodoRepository {
             return Ok(record);
         }
 
-        Err(Error::Db(Thrown(format!("Todo with title {} not found", title))))
+        Err(Error::Db(Thrown(format!(
+            "Todo with title {} not found",
+            title
+        ))))
     }
 
     pub async fn create(&self, content: Todo) -> Result<Vec<Todo>, Error> {
-        let record = self.db.client
+        let record = self
+            .db
+            .client
             .create(&self.table)
             .content(content)
             .await?
@@ -52,7 +59,9 @@ impl TodoRepository {
     }
 
     pub async fn update(&self, id: String, content: Todo) -> Result<Todo, Error> {
-        let record = self.db.client
+        let record = self
+            .db
+            .client
             .update((&self.table, id.clone()))
             .content(content)
             .await?
@@ -61,7 +70,9 @@ impl TodoRepository {
     }
 
     pub async fn delete(&self, id: String) -> Result<Todo, Error> {
-        let result = self.db.client
+        let result = self
+            .db
+            .client
             .delete((&self.table, id.clone()))
             .await?
             .ok_or(Error::Db(Thrown(format!("Todo with id {} not found", id))))?;

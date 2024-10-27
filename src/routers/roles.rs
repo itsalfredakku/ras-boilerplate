@@ -1,16 +1,23 @@
 pub mod roles_router {
-    use std::sync::Arc;
-    use axum::{routing::{get, post}, Extension, Json, Router, response::IntoResponse};
+    use crate::data::contexts::roles_context::RoleRepository;
+    use crate::database::Database;
+    use crate::models::role::Role;
     use axum::extract::Path;
     use axum::http::StatusCode;
-    use crate::data::contexts::roles_context::RoleRepository;
-    use crate::db::Database;
-    use crate::models::role::Role;
+    use axum::{
+        response::IntoResponse,
+        routing::{get, post},
+        Extension, Json, Router,
+    };
+    use std::sync::Arc;
 
     pub fn router() -> Router {
         Router::new()
             .route("/", post(create_role).get(get_all_roles))
-            .route("/:id", get(get_role_by_id).put(update_role).delete(delete_role))
+            .route(
+                "/:id",
+                get(get_role_by_id).put(update_role).delete(delete_role),
+            )
             .route("/name/:name", get(get_role_by_name))
     }
 
@@ -31,10 +38,13 @@ pub mod roles_router {
         let repository = RoleRepository::new(db);
         match repository.get_by_id(id.clone()).await {
             Ok(role) => Ok((StatusCode::OK, Json(role))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Role with ID: {} not found", id)
-            })))),
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Role with ID: {} not found", id)
+                })),
+            )),
         }
     }
 
@@ -45,17 +55,20 @@ pub mod roles_router {
         let repository = RoleRepository::new(db);
         match repository.get_by_name(name.clone()).await {
             Ok(role) => Ok((StatusCode::OK, Json(role))),
-            Err(_) => Err((StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Role with name: {} not found", name)
-            })))),
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Role with name: {} not found", name)
+                })),
+            )),
         }
     }
 
     pub async fn create_role(
         Extension(db): Extension<Arc<Database>>,
         Json(body): Json<Role>,
-    ) ->  Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = RoleRepository::new(db);
         if let Ok(role) = repository.get_by_name(body.name.clone()).await {
             let json_response = serde_json::json!({
@@ -66,14 +79,20 @@ pub mod roles_router {
             return Err((StatusCode::BAD_REQUEST, Json(json_response)));
         }
         match repository.create(body.clone()).await {
-            Ok(role) => Ok((StatusCode::CREATED, Json(serde_json::json!({
-                "status": "success",
-                "data": role[0].to_owned()
-            })))),
-            Err(_) => Err((StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to create role"
-            }))))
+            Ok(role) => Ok((
+                StatusCode::CREATED,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "data": role[0].to_owned()
+                })),
+            )),
+            Err(_) => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Failed to create role"
+                })),
+            )),
         }
     }
 
@@ -84,14 +103,20 @@ pub mod roles_router {
     ) -> impl IntoResponse {
         let repository = RoleRepository::new(db);
         match repository.update(id.clone(), body.clone()).await {
-            Ok(role) => (StatusCode::OK, Json(serde_json::json!({
-                "status": "success",
-                "data": role
-            }))),
-            Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to update role"
-            })))
+            Ok(role) => (
+                StatusCode::OK,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "data": role
+                })),
+            ),
+            Err(_) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": "Failed to update role"
+                })),
+            ),
         }
     }
 
@@ -101,14 +126,20 @@ pub mod roles_router {
     ) -> impl IntoResponse {
         let repository = RoleRepository::new(db);
         match repository.delete(id.clone()).await {
-            Ok(_) => (StatusCode::NO_CONTENT, Json(serde_json::json!({
-                "status": "success",
-                "message": "Role deleted successfully"
-            }))),
-            Err(_) => (StatusCode::NOT_FOUND, Json(serde_json::json!({
-                "status": "error",
-                "message": format!("Role with ID: {} not found", id)
-            })))
+            Ok(_) => (
+                StatusCode::NO_CONTENT,
+                Json(serde_json::json!({
+                    "status": "success",
+                    "message": "Role deleted successfully"
+                })),
+            ),
+            Err(_) => (
+                StatusCode::NOT_FOUND,
+                Json(serde_json::json!({
+                    "status": "error",
+                    "message": format!("Role with ID: {} not found", id)
+                })),
+            ),
         }
     }
 }

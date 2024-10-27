@@ -1,16 +1,13 @@
 pub mod contexts;
 
-
 #[derive(Clone, Debug)]
 pub struct DataContext {
-    db: std::sync::Arc<crate::db::Database>,
+    db: std::sync::Arc<crate::database::Database>,
 }
 
 impl DataContext {
-    pub fn new(db: std::sync::Arc<crate::db::Database>) -> Self {
-        DataContext {
-            db,
-        }
+    pub fn new(db: std::sync::Arc<crate::database::Database>) -> Self {
+        DataContext { db }
     }
 
     pub fn todos(&self) -> crate::data::contexts::todos_context::TodoRepository {
