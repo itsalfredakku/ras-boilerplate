@@ -1,0 +1,1 @@
+# Rust + SurrealDB Boilerplate
