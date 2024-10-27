@@ -1,5 +1,5 @@
 pub mod users_router {
-    use crate::data::models::user::User;
+    use crate::data::models::user::{CreateUser, UpdateUser, User};
     use crate::data::repositories::users_repository::UsersRepository;
     use crate::db::Database;
     use axum::extract::Path;
@@ -10,9 +10,7 @@ pub mod users_router {
         Extension, Json, Router,
     };
     use chrono::Local;
-    use serde::{Deserialize, Serialize};
     use std::sync::Arc;
-    use surrealdb::sql::Thing;
 
     pub fn router() -> Router {
         Router::new()
@@ -88,39 +86,72 @@ pub mod users_router {
 
     pub async fn create_user(
         Extension(db): Extension<Arc<Database>>,
-        Json(body): Json<User>,
+        Json(body): Json<CreateUser>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = UsersRepository::new(db);
-        match repository.create(body.clone()).await {
-            Ok(user) => Ok((
-                StatusCode::CREATED,
-                Json(serde_json::json!({
-                    "status": "success",
-                    "user": user
-                })),
-            )),
-            Err(_) => Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({
+        
+        match repository.get_by_email(body.email.clone()).await {
+            Ok(user) => {
+                let json_response = serde_json::json!({
                     "status": "error",
-                    "message": "Failed to create user"
-                })),
-            )),
+                    "message": "User already exists",
+                    "user": user,
+                });
+                return Err((StatusCode::BAD_REQUEST, Json(json_response)));
+            }
+            Err(_) => {
+                let datetime = Local::now();
+                let user = User {
+                    id: None,
+                    name: body.name.clone(),
+                    email: body.email.clone(),
+                    phone: body.phone.clone(),
+                    role: body.role.clone(),
+                    created_at: Some(datetime),
+                    updated_at: Some(datetime),
+                };
+                match repository.create(user.clone()).await {
+                    Ok(user_response) => Ok((
+                        StatusCode::CREATED,
+                        Json(serde_json::json!({
+                            "status": "success",
+                            "user": user_response
+                        })),
+                    )),
+                    Err(_) => Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(serde_json::json!({
+                            "status": "error",
+                            "message": "Failed to create user"
+                        })),
+                    )),
+                }
+            }
         }
+        
+        // match repository.create(body.clone()).await {
+        //     Ok(user) => Ok((
+        //         StatusCode::CREATED,
+        //         Json(serde_json::json!({
+        //             "status": "success",
+        //             "user": user
+        //         })),
+        //     )),
+        //     Err(_) => Err((
+        //         StatusCode::INTERNAL_SERVER_ERROR,
+        //         Json(serde_json::json!({
+        //             "status": "error",
+        //             "message": "Failed to create user"
+        //         })),
+        //     )),
+        // }
     }
 
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    pub struct UpdateUserRequest {
-        pub name: String,
-        pub email: String,
-        pub phone: Option<String>,
-        pub role_id: Option<Thing>,
-    }
 
     pub async fn update_user(
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
-        Json(body): Json<UpdateUserRequest>,
+        Json(body): Json<UpdateUser>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = UsersRepository::new(db);
 
@@ -130,7 +161,7 @@ pub mod users_router {
                 user.name = body.name.clone();
                 user.email = body.email.clone();
                 user.phone = body.phone.clone();
-                user.role_id = body.role_id.clone();
+                user.role = body.role.clone();
                 user.updated_at = Some(datetime);
 
                 match repository.update(id.clone(), user.clone()).await {

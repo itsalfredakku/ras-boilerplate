@@ -4,11 +4,28 @@ use surrealdb::sql::Thing;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct User {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<Thing>,
     pub name: String,
     pub email: String,
     pub phone: Option<String>,
-    pub role_id: Option<Thing>,
+    pub role: Option<Thing>,
     pub created_at: Option<DateTime<Local>>,
     pub updated_at: Option<DateTime<Local>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CreateUser {
+    pub name: String,
+    pub email: String,
+    pub phone: Option<String>,
+    pub role: Option<Thing>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct UpdateUser {
+    pub name: String,
+    pub email: String,
+    pub phone: Option<String>,
+    pub role: Option<Thing>,
 }

@@ -1,7 +1,7 @@
 pub mod todos_router {
     use crate::data::repositories::todos_repository::TodosRepository;
     use crate::db::Database;
-    use crate::data::models::todo::Todo;
+    use crate::data::models::todo::{CreateTodo, Todo, UpdateTodo};
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::response::IntoResponse;
@@ -10,7 +10,6 @@ pub mod todos_router {
         Extension, Json, Router,
     };
     use chrono::Local;
-    use serde::{Deserialize, Serialize};
     use std::sync::Arc;
 
     pub fn router() -> Router {
@@ -72,24 +71,18 @@ pub mod todos_router {
 
     pub async fn create_todo(
         Extension(db): Extension<Arc<Database>>,
-        Json(mut body): Json<Todo>,
+        Json(body): Json<CreateTodo>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = TodosRepository::new(db);
-        if let Ok(todo) = repository.get_by_title(body.title.clone()).await {
-            let json_response = serde_json::json!({
-                "status": "error",
-                "message": "Todo already exists",
-                "todo": todo,
-            });
-            return Err((StatusCode::BAD_REQUEST, Json(json_response)));
-        }
-
-        let datetime = Local::now();
-        body.completed = Some(false);
-        body.created_at = Some(datetime);
-        body.updated_at = Some(datetime);
-
-        match repository.create(body.clone()).await {
+        let todo = Todo {
+            id: None,
+            title: body.title.clone(),
+            content: Some(body.content.clone().unwrap_or("".to_string())),
+            completed: Some(body.completed.unwrap_or(false)),
+            created_at: Some(Local::now()),
+            updated_at: None,
+        };
+        match repository.create(todo).await {
             Ok(todo) => {
                 let json_response = serde_json::json!({
                     "status": "success",
@@ -105,19 +98,46 @@ pub mod todos_router {
                 })),
             )),
         }
+        
+        
+        // if let Ok(todo) = repository.get_by_title(body.title.clone()).await {
+        //     let json_response = serde_json::json!({
+        //         "status": "error",
+        //         "message": "Todo already exists",
+        //         "todo": todo,
+        //     });
+        //     return Err((StatusCode::BAD_REQUEST, Json(json_response)));
+        // }
+        // 
+        // let datetime = Local::now();
+        // body.completed = Some(false);
+        // body.created_at = Some(datetime);
+        // body.updated_at = Some(datetime);
+        // 
+        // match repository.create(body.clone()).await {
+        //     Ok(todo) => {
+        //         let json_response = serde_json::json!({
+        //             "status": "success",
+        //             "todo": todo.to_owned(),
+        //         });
+        //         Ok((StatusCode::CREATED, Json(json_response)))
+        //     }
+        //     Err(_) => Err((
+        //         StatusCode::INTERNAL_SERVER_ERROR,
+        //         Json(serde_json::json!({
+        //             "status": "error",
+        //             "message": "Failed to create todo"
+        //         })),
+        //     )),
+        // }
     }
 
-    #[derive(Debug, Deserialize, Serialize, Clone)]
-    pub struct UpdateTodoRequest {
-        pub title: Option<String>,
-        pub content: Option<String>,
-        pub completed: Option<bool>,
-    }
+
 
     pub async fn update_todo(
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
-        Json(body): Json<UpdateTodoRequest>,
+        Json(body): Json<UpdateTodo>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = TodosRepository::new(db);
 
@@ -125,7 +145,7 @@ pub mod todos_router {
             Ok(mut todo) => {
                 let datetime = Local::now();
                 todo.title = body.title.clone().unwrap_or(todo.title);
-                todo.content = body.content.clone().unwrap_or(todo.content);
+                todo.content = body.content.or(todo.content);
                 todo.completed = body.completed.or(todo.completed);
                 todo.updated_at = Some(datetime);
 

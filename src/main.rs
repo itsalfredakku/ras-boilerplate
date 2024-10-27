@@ -35,7 +35,7 @@ async fn main() {
                 .parse::<HeaderValue>()
                 .expect("Invalid ALLOWED_ORIGINS header value"),
         )
-        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE])
         .allow_credentials(true)
         .allow_headers([AUTHORIZATION, ACCEPT, CONTENT_TYPE]);
 

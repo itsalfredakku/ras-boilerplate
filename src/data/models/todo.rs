@@ -6,9 +6,21 @@ use surrealdb::sql::Thing;
 pub struct Todo {
     pub id: Option<Thing>,
     pub title: String,
-    pub content: String,
-    // Use Option<bool> correctly here, assuming you want to track completion status.
+    pub content: Option<String>,
     pub completed: Option<bool>,
     pub created_at: Option<DateTime<Local>>,
     pub updated_at: Option<DateTime<Local>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CreateTodo {
+    pub title: String,
+    pub content: Option<String>,
+    pub completed: Option<bool>,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct UpdateTodo {
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub completed: Option<bool>,
 }
