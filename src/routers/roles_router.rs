@@ -1,7 +1,7 @@
-pub mod users_router {
-    use crate::repositories::users_repository::UsersRepository;
+pub mod roles_router {
+    use crate::repositories::roles_repository::RolesRepository;
     use crate::database::Database;
-    use crate::models::user::User;
+    use crate::models::role::Role;
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::{
@@ -13,141 +13,131 @@ pub mod users_router {
 
     pub fn router() -> Router {
         Router::new()
-            .route("/", post(create_user).get(get_all_users))
+            .route("/", post(create_role).get(get_all_roles))
             .route(
                 "/:id",
-                get(get_user_by_id).put(update_user).delete(delete_user),
+                get(get_role_by_id).put(update_role).delete(delete_role),
             )
-            .route("/email/:email", get(get_user_by_email))
-            .route("/phone/:phone", get(get_user_by_phone))
+            .route("/name/:name", get(get_role_by_name))
     }
 
-    pub async fn get_all_users(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {
-        let repository = UsersRepository::new(db);
-        let users = repository.get_all().await.unwrap_or_default();
+    pub async fn get_all_roles(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {
+        let repository = RolesRepository::new(db);
+        let roles = repository.get_all().await.unwrap_or_default();
         Json(serde_json::json!({
             "status": "success",
-            "results": users.len(),
-            "users": users
+            "count": roles.len(),
+            "roles": roles
         }))
     }
 
-    pub async fn get_user_by_id(
+    pub async fn get_role_by_id(
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UsersRepository::new(db);
+        let repository = RolesRepository::new(db);
         match repository.get_by_id(id.clone()).await {
-            Ok(user) => Ok((StatusCode::OK, Json(user))),
+            Ok(role) => Ok((StatusCode::OK, Json(role))),
             Err(_) => Err((
                 StatusCode::NOT_FOUND,
                 Json(serde_json::json!({
                     "status": "error",
-                    "message": format!("User with ID: {} not found", id)
+                    "message": format!("Role with ID: {} not found", id)
                 })),
             )),
         }
     }
 
-    pub async fn get_user_by_email(
+    pub async fn get_role_by_name(
         Extension(db): Extension<Arc<Database>>,
-        Path(email): Path<String>,
+        Path(name): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UsersRepository::new(db);
-        match repository.get_by_email(email.clone()).await {
-            Ok(user) => Ok((StatusCode::OK, Json(user))),
+        let repository = RolesRepository::new(db);
+        match repository.get_by_name(name.clone()).await {
+            Ok(role) => Ok((StatusCode::OK, Json(role))),
             Err(_) => Err((
                 StatusCode::NOT_FOUND,
                 Json(serde_json::json!({
                     "status": "error",
-                    "message": format!("User with email: {} not found", email)
+                    "message": format!("Role with name: {} not found", name)
                 })),
             )),
         }
     }
 
-    pub async fn get_user_by_phone(
+    pub async fn create_role(
         Extension(db): Extension<Arc<Database>>,
-        Path(phone): Path<String>,
+        Json(body): Json<Role>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UsersRepository::new(db);
-        match repository.get_by_phone(phone.clone()).await {
-            Ok(user) => Ok((StatusCode::OK, Json(user))),
-            Err(_) => Err((
-                StatusCode::NOT_FOUND,
-                Json(serde_json::json!({
-                    "status": "error",
-                    "message": format!("User with phone: {} not found", phone)
-                })),
-            )),
+        let repository = RolesRepository::new(db);
+        if let Ok(role) = repository.get_by_name(body.name.clone()).await {
+            let json_response = serde_json::json!({
+                "status": "error",
+                "message": "Role already exists",
+                "repositories": role,
+            });
+            return Err((StatusCode::BAD_REQUEST, Json(json_response)));
         }
-    }
-
-    pub async fn create_user(
-        Extension(db): Extension<Arc<Database>>,
-        Json(body): Json<User>,
-    ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UsersRepository::new(db);
         match repository.create(body.clone()).await {
-            Ok(user) => Ok((
+            Ok(role) => Ok((
                 StatusCode::CREATED,
                 Json(serde_json::json!({
                     "status": "success",
-                    "repositories": user
+                    "repositories": role[0].to_owned()
                 })),
             )),
             Err(_) => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({
                     "status": "error",
-                    "message": "Failed to create user"
+                    "message": "Failed to create role"
                 })),
             )),
         }
     }
 
-    pub async fn update_user(
+    pub async fn update_role(
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
-        Json(body): Json<User>,
+        Json(body): Json<Role>,
     ) -> impl IntoResponse {
-        let repository = UsersRepository::new(db);
+        let repository = RolesRepository::new(db);
         match repository.update(id.clone(), body.clone()).await {
-            Ok(user) => (
+            Ok(role) => (
                 StatusCode::OK,
                 Json(serde_json::json!({
                     "status": "success",
-                    "repositories": user
+                    "repositories": role
                 })),
             ),
             Err(_) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({
                     "status": "error",
-                    "message": "Failed to update user"
+                    "message": "Failed to update role"
                 })),
             ),
         }
     }
 
-    pub async fn delete_user(
+    pub async fn delete_role(
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
-        let repository = UsersRepository::new(db);
+        let repository = RolesRepository::new(db);
         match repository.delete(id.clone()).await {
             Ok(_) => (
                 StatusCode::NO_CONTENT,
                 Json(serde_json::json!({
                     "status": "success",
-                    "message": "User deleted successfully"
+                    "message": "Role deleted successfully"
                 })),
             ),
             Err(_) => (
                 StatusCode::NOT_FOUND,
                 Json(serde_json::json!({
                     "status": "error",
-                    "message": format!("User with ID: {} not found", id)
+                    "message": format!("Role with ID: {} not found", id)
                 })),
             ),
         }

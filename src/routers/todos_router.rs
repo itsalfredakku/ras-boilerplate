@@ -29,7 +29,7 @@ pub mod todos_router {
         let todos = repository.get_all().await.unwrap_or_default();
         let json_response = serde_json::json!({
             "status": "success",
-            "results": todos.len(),
+            "count": todos.len(),
             "todos": todos,
         });
 
