@@ -83,7 +83,7 @@ pub mod roles_router {
                 StatusCode::CREATED,
                 Json(serde_json::json!({
                     "status": "success",
-                    "repositories": role.to_owned()
+                    "role": role.to_owned()
                 })),
             )),
             Err(_) => Err((
@@ -107,7 +107,7 @@ pub mod roles_router {
                 StatusCode::OK,
                 Json(serde_json::json!({
                     "status": "success",
-                    "repositories": role
+                    "role": role
                 })),
             ),
             Err(_) => (

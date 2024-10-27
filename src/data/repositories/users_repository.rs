@@ -1,6 +1,7 @@
 use crate::db::Database;
 use crate::data::models::user::User;
 use std::sync::Arc;
+use chrono::Local;
 use surrealdb::err::Error::Thrown;
 use surrealdb::Error;
 
@@ -66,23 +67,25 @@ impl UsersRepository {
         ))))
     }
 
-    pub async fn create(&self, content: User) -> Result<User, Error> {
+    pub async fn create(&self, mut user: User) -> Result<User, Error> {
+        user.created_at = Some(Local::now());
         let record = self
             .db
             .client
             .create(&self.table)
-            .content(content)
+            .content(user)
             .await?
             .ok_or_else(|| Error::Db(Thrown("Failed to create user".to_string())))?;
         Ok(record)
     }
 
-    pub async fn update(&self, id: String, content: User) -> Result<User, Error> {
+    pub async fn update(&self, id: String, mut user: User) -> Result<User, Error> {
+        user.updated_at = Some(Local::now());
         let record = self
             .db
             .client
             .update((&self.table, id.clone()))
-            .content(content)
+            .content(user)
             .await?
             .ok_or(Error::Db(Thrown(format!("User with id {} not found", id))))?;
         Ok(record)

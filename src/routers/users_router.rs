@@ -1,7 +1,7 @@
 pub mod users_router {
+    use crate::data::models::user::User;
     use crate::data::repositories::users_repository::UsersRepository;
     use crate::db::Database;
-    use crate::data::models::user::User;
     use axum::extract::Path;
     use axum::http::StatusCode;
     use axum::{
@@ -9,7 +9,10 @@ pub mod users_router {
         routing::{get, post},
         Extension, Json, Router,
     };
+    use chrono::Local;
+    use serde::{Deserialize, Serialize};
     use std::sync::Arc;
+    use surrealdb::sql::Thing;
 
     pub fn router() -> Router {
         Router::new()
@@ -93,7 +96,7 @@ pub mod users_router {
                 StatusCode::CREATED,
                 Json(serde_json::json!({
                     "status": "success",
-                    "repositories": user
+                    "user": user
                 })),
             )),
             Err(_) => Err((
@@ -106,28 +109,73 @@ pub mod users_router {
         }
     }
 
+    #[derive(Debug, Deserialize, Serialize, Clone)]
+    pub struct UpdateUserRequest {
+        pub name: String,
+        pub email: String,
+        pub phone: Option<String>,
+        pub role_id: Option<Thing>,
+    }
+
     pub async fn update_user(
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
-        Json(body): Json<User>,
-    ) -> impl IntoResponse {
+        Json(body): Json<UpdateUserRequest>,
+    ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
         let repository = UsersRepository::new(db);
-        match repository.update(id.clone(), body.clone()).await {
-            Ok(user) => (
-                StatusCode::OK,
-                Json(serde_json::json!({
-                    "status": "success",
-                    "repositories": user
-                })),
-            ),
-            Err(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
+
+        match repository.get_by_id(id.clone()).await {
+            Ok(mut user) => {
+                let datetime = Local::now();
+                user.name = body.name.clone();
+                user.email = body.email.clone();
+                user.phone = body.phone.clone();
+                user.role_id = body.role_id.clone();
+                user.updated_at = Some(datetime);
+
+                match repository.update(id.clone(), user.clone()).await {
+                    Ok(user_response) => Ok((
+                        StatusCode::OK,
+                        Json(serde_json::json!({
+                            "status": "success",
+                            "user": user_response
+                        })),
+                    )),
+                    Err(_) => Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(serde_json::json!({
+                            "status": "error",
+                            "message": "Failed to update todo"
+                        })),
+                    )),
+                }
+            }
+            Err(_) => Err((
+                StatusCode::NOT_FOUND,
                 Json(serde_json::json!({
                     "status": "error",
-                    "message": "Failed to update user"
+                    "message": format!("Todo with ID: {} not found", id)
                 })),
-            ),
+            )),
         }
+        // match repository.get_by_id(id.clone()).await {
+        //     Ok(mut user) => {
+        //         user.name = body.name.clone();
+        //         user.email = body.email.clone();
+        //         user.phone = body.phone.clone();
+        //         user.role_id = body.role_id.clone();
+        //         let user = repository.update(id, user).await.unwrap();
+        //
+        //         Json(serde_json::json!({
+        //             "status": "success",
+        //             "user": user
+        //         }))
+        //     }
+        //     Err(_) => Json(serde_json::json!({
+        //         "status": "error",
+        //         "message": format!("User with ID: {} not found", id)
+        //     })),
+        // }
     }
 
     pub async fn delete_user(
