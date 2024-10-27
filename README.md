@@ -1,1 +1,1 @@
-# Rust + SurrealDB (Backend) Boilerplate
+# Rust + Axum + SurrealDB (Backend) Boilerplate
