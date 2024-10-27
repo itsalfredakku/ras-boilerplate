@@ -1,5 +1,5 @@
 pub mod todos_router {
-    use crate::data::contexts::todos_context::TodoRepository;
+    use crate::repositories::todos_repository::TodosRepository;
     use crate::database::Database;
     use crate::models::todo::Todo;
     use axum::extract::Path;
@@ -24,7 +24,7 @@ pub mod todos_router {
     }
 
     pub async fn get_all_todos(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {
-        let repository = TodoRepository::new(db);
+        let repository = TodosRepository::new(db);
 
         let todos = repository.get_all().await.unwrap_or_default();
         let json_response = serde_json::json!({
@@ -40,7 +40,7 @@ pub mod todos_router {
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = TodoRepository::new(db);
+        let repository = TodosRepository::new(db);
         match repository.get_by_id(id.clone()).await {
             Ok(todo) => Ok((StatusCode::OK, Json(todo))),
             Err(_) => Err((
@@ -57,7 +57,7 @@ pub mod todos_router {
         Extension(db): Extension<Arc<Database>>,
         Path(title): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = TodoRepository::new(db);
+        let repository = TodosRepository::new(db);
         match repository.get_by_title(title.clone()).await {
             Ok(todo) => Ok((StatusCode::OK, Json(todo))),
             Err(_) => Err((
@@ -74,12 +74,12 @@ pub mod todos_router {
         Extension(db): Extension<Arc<Database>>,
         Json(mut body): Json<Todo>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = TodoRepository::new(db);
+        let repository = TodosRepository::new(db);
         if let Ok(todo) = repository.get_by_title(body.title.clone()).await {
             let json_response = serde_json::json!({
                 "status": "error",
                 "message": "Todo already exists",
-                "data": todo,
+                "repositories": todo,
             });
             return Err((StatusCode::BAD_REQUEST, Json(json_response)));
         }
@@ -93,7 +93,7 @@ pub mod todos_router {
             Ok(todo) => {
                 let json_response = serde_json::json!({
                     "status": "success",
-                    "data": todo[0].to_owned(),
+                    "repositories": todo[0].to_owned(),
                 });
                 Ok((StatusCode::CREATED, Json(json_response)))
             }
@@ -119,7 +119,7 @@ pub mod todos_router {
         Path(id): Path<String>,
         Json(body): Json<UpdateTodoRequest>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = TodoRepository::new(db);
+        let repository = TodosRepository::new(db);
 
         match repository.get_by_id(id.clone()).await {
             Ok(mut todo) => {
@@ -134,7 +134,7 @@ pub mod todos_router {
                         StatusCode::OK,
                         Json(serde_json::json!({
                             "status": "success",
-                            "data": todo_response
+                            "repositories": todo_response
                         })),
                     )),
                     Err(_) => Err((
@@ -160,7 +160,7 @@ pub mod todos_router {
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = TodoRepository::new(db);
+        let repository = TodosRepository::new(db);
 
         if repository.get_by_id(id.clone()).await.is_ok() {
             repository.delete(id.clone()).await.unwrap();

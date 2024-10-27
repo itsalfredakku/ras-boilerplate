@@ -3,14 +3,14 @@ use crate::models::todo::Todo;
 use std::sync::Arc;
 use surrealdb::{error::Db::Thrown, Error};
 
-pub struct TodoRepository {
+pub struct TodosRepository {
     db: Arc<Database>,
     table: String,
 }
 
-impl TodoRepository {
+impl TodosRepository {
     pub fn new(db: Arc<Database>) -> Self {
-        TodoRepository {
+        TodosRepository {
             db,
             table: String::from("todo"),
         }

@@ -1,5 +1,5 @@
 pub mod users_router {
-    use crate::data::contexts::user_repository::UserRepository;
+    use crate::repositories::users_repository::UsersRepository;
     use crate::database::Database;
     use crate::models::user::User;
     use axum::extract::Path;
@@ -23,7 +23,7 @@ pub mod users_router {
     }
 
     pub async fn get_all_users(Extension(db): Extension<Arc<Database>>) -> impl IntoResponse {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         let users = repository.get_all().await.unwrap_or_default();
         Json(serde_json::json!({
             "status": "success",
@@ -36,7 +36,7 @@ pub mod users_router {
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         match repository.get_by_id(id.clone()).await {
             Ok(user) => Ok((StatusCode::OK, Json(user))),
             Err(_) => Err((
@@ -53,7 +53,7 @@ pub mod users_router {
         Extension(db): Extension<Arc<Database>>,
         Path(email): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         match repository.get_by_email(email.clone()).await {
             Ok(user) => Ok((StatusCode::OK, Json(user))),
             Err(_) => Err((
@@ -70,7 +70,7 @@ pub mod users_router {
         Extension(db): Extension<Arc<Database>>,
         Path(phone): Path<String>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         match repository.get_by_phone(phone.clone()).await {
             Ok(user) => Ok((StatusCode::OK, Json(user))),
             Err(_) => Err((
@@ -87,13 +87,13 @@ pub mod users_router {
         Extension(db): Extension<Arc<Database>>,
         Json(body): Json<User>,
     ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         match repository.create(body.clone()).await {
             Ok(user) => Ok((
                 StatusCode::CREATED,
                 Json(serde_json::json!({
                     "status": "success",
-                    "data": user
+                    "repositories": user
                 })),
             )),
             Err(_) => Err((
@@ -111,13 +111,13 @@ pub mod users_router {
         Path(id): Path<String>,
         Json(body): Json<User>,
     ) -> impl IntoResponse {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         match repository.update(id.clone(), body.clone()).await {
             Ok(user) => (
                 StatusCode::OK,
                 Json(serde_json::json!({
                     "status": "success",
-                    "data": user
+                    "repositories": user
                 })),
             ),
             Err(_) => (
@@ -134,7 +134,7 @@ pub mod users_router {
         Extension(db): Extension<Arc<Database>>,
         Path(id): Path<String>,
     ) -> impl IntoResponse {
-        let repository = UserRepository::new(db);
+        let repository = UsersRepository::new(db);
         match repository.delete(id.clone()).await {
             Ok(_) => (
                 StatusCode::NO_CONTENT,

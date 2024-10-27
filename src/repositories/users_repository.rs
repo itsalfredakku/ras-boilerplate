@@ -4,14 +4,14 @@ use std::sync::Arc;
 use surrealdb::err::Error::Thrown;
 use surrealdb::Error;
 
-pub struct UserRepository {
+pub struct UsersRepository {
     db: Arc<Database>,
     table: String,
 }
 
-impl UserRepository {
+impl UsersRepository {
     pub fn new(db: Arc<Database>) -> Self {
-        UserRepository {
+        UsersRepository {
             db,
             table: String::from("user"),
         }
