@@ -1,4 +1,4 @@
-pub mod api;
+pub mod routers;
 pub mod data;
 pub mod models;
 pub mod db;

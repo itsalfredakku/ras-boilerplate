@@ -9,7 +9,7 @@ extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
 use axum::{Extension, Router};
-use rss_boilerplate::api::api_router::api_router;
+use rss_boilerplate::routers::api_router::api_router;
 
 #[tokio::main]
 async fn main() {
