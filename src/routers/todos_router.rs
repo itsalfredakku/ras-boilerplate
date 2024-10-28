@@ -98,38 +98,6 @@ pub mod todos_router {
                 })),
             )),
         }
-        
-        
-        // if let Ok(todo) = repository.get_by_title(body.title.clone()).await {
-        //     let json_response = serde_json::json!({
-        //         "status": "error",
-        //         "message": "Todo already exists",
-        //         "todo": todo,
-        //     });
-        //     return Err((StatusCode::BAD_REQUEST, Json(json_response)));
-        // }
-        // 
-        // let datetime = Local::now();
-        // body.completed = Some(false);
-        // body.created_at = Some(datetime);
-        // body.updated_at = Some(datetime);
-        // 
-        // match repository.create(body.clone()).await {
-        //     Ok(todo) => {
-        //         let json_response = serde_json::json!({
-        //             "status": "success",
-        //             "todo": todo.to_owned(),
-        //         });
-        //         Ok((StatusCode::CREATED, Json(json_response)))
-        //     }
-        //     Err(_) => Err((
-        //         StatusCode::INTERNAL_SERVER_ERROR,
-        //         Json(serde_json::json!({
-        //             "status": "error",
-        //             "message": "Failed to create todo"
-        //         })),
-        //     )),
-        // }
     }
 
 
